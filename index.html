@@ -1,10 +1,1747 @@
 <!DOCTYPE html>
-<html>
+<html dir="rtl" lang="ar">
 <head>
-    <title>موقعي الأول</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>نظام المناوبات الذكي - مستشفى عبري</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<style>
+:root {
+  --green:#10b981;--green-dark:#059669;--green-light:#d1fae5;
+  --blue:#3b82f6;--orange:#f97316;--purple:#8b5cf6;
+  --red:#ef4444;--red-light:#fee2e2;--teal:#14b8a6;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+  --gray-600:#4b5563;--gray-800:#1f2937;--white:#ffffff;
+  --shadow:0 4px 12px rgba(0,0,0,.07);--shadow-md:0 8px 24px rgba(0,0,0,.09);
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'Cairo',sans-serif;background:linear-gradient(145deg,#ecfdf5,#f0f9ff);
+  color:var(--gray-800);min-height:100vh;padding-bottom:calc(84px + var(--safe-bottom));
+  -webkit-font-smoothing:antialiased}
+
+/* ═══════════════════════════════════════ */
+/* تسريع استجابة اللمس */
+/* ═══════════════════════════════════════ */
+button, .nav-tab, .wk-btn, .wa-btn, .login-btn, .act-btn, .icon-btn, .radio-option, .toggle-row, .ftab, .leave-act-btn {
+  touch-action: manipulation !important;
+  cursor: pointer;
+  transition: transform 0.06s ease-out, opacity 0.08s;
+}
+
+button:active, .nav-tab:active, .wk-btn:active, .wa-btn:active, 
+.login-btn:active, .act-btn:active, .icon-btn:active, .ftab:active,
+.leave-act-btn:active, .radio-option:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.02s !important;
+  opacity: 0.85;
+}
+
+.modal-custom .btn, .emp-row .icon-btn, .ov-list-item .icon-btn {
+  touch-action: manipulation;
+}
+
+/* باقي الكود الأصلي */
+button,a{touch-action:manipulation;cursor:pointer}
+input,select,textarea{font-size:16px!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.animate-in{animation:fadeUp .32s ease-out forwards}
+.fa-spin{animation:spin 1s linear infinite}
+
+/* SPLASH */
+.splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f766e,#0d9488 50%,#38bdf8);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .4s ease;padding:24px}
+.splash.hide{opacity:0;pointer-events:none}
+.splash-emb{font-size:64px;animation:fadeUp .4s ease-out}
+.splash-title{font-size:1.5rem;font-weight:900;color:white;text-align:center;animation:fadeUp .4s ease-out .1s both}
+.splash-sub{font-size:.82rem;color:rgba(255,255,255,.75);animation:fadeUp .4s ease-out .2s both}
+.splash-dots{display:flex;gap:8px;margin-top:8px;animation:fadeUp .4s ease-out .3s both}
+.splash-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.5)}
+.splash-dot:nth-child(1){animation:pulse 1.2s ease-in-out infinite}
+.splash-dot:nth-child(2){animation:pulse 1.2s ease-in-out infinite .2s}
+.splash-dot:nth-child(3){animation:pulse 1.2s ease-in-out infinite .4s}
+
+/* LOGIN */
+.login-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0f766e,#0d9488 50%,#38bdf8);
+  padding:24px;padding-top:calc(24px + var(--safe-top));padding-bottom:calc(24px + var(--safe-bottom))}
+.login-card{background:rgba(255,255,255,.97);border-radius:36px;padding:40px 30px;
+  width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.login-header{text-align:center;margin-bottom:28px}
+.login-emblem{font-size:50px;display:inline-block;margin-bottom:8px}
+.login-header h1{font-size:1.45rem;font-weight:900;background:linear-gradient(135deg,#0f766e,#3b82f6);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.login-header p{color:var(--gray-600);font-size:.8rem;margin-top:4px}
+.inp-label{display:block;font-size:.78rem;font-weight:700;color:var(--gray-600);margin-bottom:5px}
+.inp{width:100%;padding:13px 18px;border:2px solid var(--gray-200);border-radius:28px;
+  font-family:'Cairo',sans-serif;font-size:16px;transition:.2s;background:var(--white);-webkit-appearance:none}
+.inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.inp-group{margin-bottom:16px}
+.login-btn{width:100%;padding:14px;background:linear-gradient(90deg,var(--green),var(--green-dark));
+  border:none;border-radius:40px;color:white;font-weight:800;font-size:1rem;
+  font-family:'Cairo',sans-serif;display:flex;align-items:center;justify-content:center;
+  gap:10px;transition:.2s;min-height:52px}
+.login-btn:active{transform:scale(.97);opacity:.9}
+.login-btn:disabled{opacity:.65}
+.login-err{background:var(--red-light);border:1px solid #fecaca;color:#b91c1c;
+  border-radius:14px;padding:10px 14px;font-size:.78rem;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* TOP BAR */
+.top-bar{position:sticky;top:0;z-index:100;padding-top:var(--safe-top);
+  background:linear-gradient(135deg,#0c3d52,#0d5c6e 45%,#0f7a6b);
+  box-shadow:0 4px 20px rgba(12,61,82,.35)}
+.flag-bar{height:5px;background:linear-gradient(90deg,#c8102e 0 33.3%,#fff 33.3% 66.6%,#008000 66.6% 100%)}
+.hdr-glow{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),rgba(255,215,100,.5),rgba(255,255,255,.35),transparent);
+  background-size:200% auto;animation:shimmer 3s linear infinite}
+.top-cont{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 11px;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-emb{width:42px;height:42px;flex-shrink:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;backdrop-filter:blur(4px)}
+.hosp-name{font-size:.88rem;font-weight:900;color:#fff;line-height:1.2}
+.sys-name{font-size:.62rem;font-weight:600;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:4px;margin-top:1px}
+.sys-dot{width:5px;height:5px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.sys-dot.syncing{background:#fb923c;animation:pulse .8s ease-in-out infinite}
+.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);padding:5px 8px 5px 10px;border-radius:60px;
+  backdrop-filter:blur(6px);min-width:0}
+.u-avatar{width:34px;height:34px;flex-shrink:0;background:linear-gradient(135deg,#34d399,#0d9488);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;
+  box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.u-name{font-weight:800;font-size:.78rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px}
+.u-role{font-size:.6rem;color:rgba(255,255,255,.6)}
+.logout-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.8);font-size:.75rem;flex-shrink:0;transition:.2s}
+.logout-btn:active{background:rgba(239,68,68,.4);color:#fff}
+
+/* BOTTOM NAV */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);
+  backdrop-filter:blur(14px);border-top:1px solid var(--gray-200);display:flex;
+  padding:6px 4px;padding-bottom:calc(6px + var(--safe-bottom));justify-content:space-around;z-index:90}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;
+  font-family:'Cairo',sans-serif;font-size:.58rem;font-weight:600;color:var(--gray-600);
+  padding:6px 2px;border-radius:28px;transition:.2s;min-height:52px;position:relative}
+.nav-tab i{font-size:1.1rem}
+.nav-tab.active{color:#0d7a6e;background:#d1fae5}
+.nav-badge{position:absolute;top:4px;right:10px;background:#ef4444;color:white;
+  border-radius:50%;width:15px;height:15px;font-size:.55rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center}
+
+/* PAGE */
+.page{padding:14px;max-width:720px;margin:0 auto}
+
+/* WEEK NAV */
+.week-nav{background:var(--white);border-radius:60px;padding:6px 8px;display:flex;
+  align-items:center;justify-content:space-between;margin-bottom:14px;
+  box-shadow:var(--shadow);border:1px solid var(--gray-100)}
+.wk-btn{background:var(--green-light);border:none;padding:9px 14px;border-radius:40px;
+  font-weight:700;color:var(--green-dark);display:flex;gap:6px;align-items:center;
+  font-family:'Cairo',sans-serif;font-size:.8rem;min-height:40px;transition:.15s}
+.wk-btn:active{transform:scale(.95)}
+.wk-range{font-weight:800;background:var(--gray-100);padding:6px 14px;border-radius:40px;font-size:.8rem}
+
+/* WA BAR */
+.wa-bar{background:linear-gradient(90deg,#d1fae5,#a7f3d0);border-radius:18px;padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border:1px solid #a7f3d0}
+.wa-btn{background:#25D366;border:none;padding:7px 14px;border-radius:40px;color:white;
+  font-weight:700;font-size:.73rem;font-family:'Cairo',sans-serif;min-height:34px;transition:.2s}
+.wa-btn:active{opacity:.85}
+
+/* DAY CARDS */
+.day-card{background:var(--white);border-radius:22px;margin-bottom:14px;box-shadow:var(--shadow-md);overflow:hidden}
+.day-hdr{padding:11px 15px;display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(95deg,#2c3e50,#1e293b);color:white}
+.day-hdr.weekend{background:linear-gradient(95deg,#c2410c,#9a3412)}
+.day-name{font-weight:800;font-size:.92rem}
+.day-date-txt{font-weight:400;opacity:.85}
+.day-badge{background:rgba(255,255,255,.2);padding:3px 10px;border-radius:40px;font-size:.67rem;font-weight:600}
+.day-body{padding:10px}
+.s-row{border-radius:16px;margin-bottom:8px;display:flex;gap:10px;padding:10px 11px}
+.s-icon{width:40px;height:40px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+.s-details{flex:1;min-width:0}
+.s-title{font-weight:800;font-size:.83rem}
+.s-time{font-size:.67rem;color:var(--gray-600);margin-top:2px}
+.emp-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.e-badge{background:var(--green);color:white;padding:3px 10px;border-radius:30px;
+  font-size:.67rem;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.e-badge.orange{background:var(--orange)}
+.e-badge.muted{background:var(--gray-200);color:var(--gray-600)}
+.e-badge.ov{background:#7c3aed}
+.ov-tag{font-size:.58rem;background:rgba(255,255,255,.25);padding:1px 5px;border-radius:20px;font-weight:700}
+.s-morning{background:#e0f2fe;border-right:4px solid #0284c7}
+.s-morning .s-icon{background:#0284c7;color:white}
+.s-afternoon{background:#ffedd5;border-right:4px solid #ea580c}
+.s-afternoon .s-icon{background:#ea580c;color:white}
+.s-evening{background:#d1fae5;border-right:4px solid #059669}
+.s-evening .s-icon{background:#059669;color:white}
+.s-night{background:#ede9fe;border-right:4px solid #7c3aed}
+.s-night .s-icon{background:#7c3aed;color:white}
+.s-weekend{background:#fff7ed;border-right:4px solid #d97706}
+.s-weekend .s-icon{background:#d97706;color:white}
+.s-comp{background:#ccfbf1;border-right:4px solid #0d9488}
+.s-comp .s-icon{background:#0d9488;color:white}
+/* LEAVE ROW IN SCHEDULE */
+.s-leave{background:#f1f5f9;border-right:4px solid #94a3b8}
+.s-leave .s-icon{background:#94a3b8;color:white}
+
+/* MY SHIFTS */
+.ms-item{background:var(--white);border-radius:18px;padding:13px;margin-bottom:9px;
+  display:flex;align-items:center;gap:11px;box-shadow:var(--shadow);border-right:5px solid}
+.ms-dot{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.ms-date{font-weight:800;font-size:.86rem}
+.ms-label{font-size:.7rem;color:var(--gray-600);margin-top:2px}
+.s-type-badge{margin-right:auto;padding:4px 10px;border-radius:30px;font-size:.67rem;font-weight:700;white-space:nowrap;flex-shrink:0}
+
+/* ADMIN */
+.admin-card{background:var(--white);border-radius:22px;overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-md)}
+.admin-hdr{background:var(--gray-800);color:white;padding:12px 15px;display:flex;
+  justify-content:space-between;align-items:center;font-weight:700;font-size:.86rem;flex-wrap:wrap;gap:8px}
+.emp-row{display:flex;align-items:flex-start;padding:11px 14px;border-bottom:1px solid var(--gray-100);gap:10px}
+.emp-av{width:40px;height:40px;background:var(--green-light);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;color:var(--green-dark);flex-shrink:0;font-size:1rem}
+.emp-name{font-weight:800;font-size:.82rem}
+.emp-creds{font-size:.67rem;color:var(--gray-600)}
+.ov-badge{font-size:.6rem;background:#f5f3ff;color:#7c3aed;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block;font-weight:700}
+.res-badge{font-size:.6rem;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block;font-weight:700;margin-left:4px}
+.res-night{background:#ede9fe;color:#7c3aed}
+.res-wknd{background:#fef3c7;color:#d97706}
+.act-icons{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.icon-btn{background:var(--gray-100);border:none;width:33px;height:33px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:.78rem;transition:.15s}
+.icon-btn:active{transform:scale(.9)}
+
+/* FAIRNESS */
+.f-item{display:flex;align-items:center;gap:10px;margin-bottom:9px;padding:8px 12px;background:var(--gray-50);border-radius:50px}
+.f-name{width:80px;font-weight:700;font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f-bar{flex:1;height:8px;background:var(--gray-200);border-radius:20px;overflow:hidden}
+.f-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:20px;transition:width .6s ease}
+.f-count{font-weight:800;color:var(--green-dark);min-width:28px;text-align:left;font-size:.84rem}
+
+/* TOAST */
+.toast-msg{position:fixed;top:calc(80px + var(--safe-top));left:50%;
+  transform:translateX(-50%) translateY(-8px);background:var(--gray-800);color:white;
+  padding:9px 22px;border-radius:60px;font-weight:600;font-size:.8rem;display:flex;
+  align-items:center;gap:8px;z-index:2000;transition:opacity .22s,transform .22s;
+  opacity:0;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 28px);box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.toast-msg.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-msg.success{background:#059669}
+.toast-msg.error{background:#dc2626}
+.toast-msg.info{background:#2563eb}
+
+/* MODAL */
+.modal-custom .modal-content{border-radius:26px;border:none;overflow:hidden}
+.modal-custom .modal-header{background:var(--gray-800);color:white;border:none}
+.modal-custom .modal-title{font-weight:800;font-size:.95rem}
+.modal-custom .form-control,.modal-custom .form-select{border-radius:18px;border:2px solid var(--gray-200);
+  font-family:'Cairo',sans-serif;font-size:16px;padding:9px 15px}
+.modal-custom .form-control:focus,.modal-custom .form-select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+.modal-custom .modal-footer{border:none;padding:12px 16px}
+.modal-custom .btn-success{background:var(--green);border:none;border-radius:18px;font-family:'Cairo',sans-serif;font-weight:700}
+.modal-custom .btn-secondary{border-radius:18px;font-family:'Cairo',sans-serif}
+.modal-custom .form-label{font-weight:700;font-size:.8rem;color:var(--gray-600);margin-bottom:5px}
+.m-section{background:var(--gray-50);border-radius:14px;padding:14px;margin-bottom:12px}
+.m-sec-title{font-weight:800;font-size:.82rem;color:var(--gray-800);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.ov-list-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;
+  background:white;border-radius:10px;margin-bottom:6px;font-size:.76rem;gap:8px}
+.radio-grp{display:flex;flex-direction:column;gap:8px}
+.radio-option{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:.82rem;padding:8px 12px;background:white;border-radius:12px;border:2px solid var(--gray-200);transition:.2s}
+.radio-option.selected{border-color:var(--green);background:#f0fdf4}
+.radio-option.selected.remove{border-color:var(--red);background:#fff5f5}
+.radio-option.selected.revert{border-color:#0284c7;background:#e0f2fe}
+
+/* TOGGLE SWITCH */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:white;border-radius:12px;font-weight:700;font-size:.82rem;gap:10px}
+.toggle-wrap{position:relative;flex-shrink:0}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{display:block;width:44px;height:24px;background:var(--gray-200);border-radius:20px;position:relative;transition:.3s;cursor:pointer}
+.toggle-slider::after{content:'';position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:white;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle-wrap input:checked + .toggle-slider{background:var(--green)}
+.toggle-wrap input:checked + .toggle-slider::after{right:calc(100% - 21px)}
+
+/* ACTIONS */
+.act-btn{width:100%;padding:13px;border:none;border-radius:40px;color:white;
+  font-weight:800;font-size:.93rem;font-family:'Cairo',sans-serif;display:flex;
+  align-items:center;justify-content:center;gap:10px;transition:.2s;margin-bottom:9px;min-height:50px}
+.act-btn:active{transform:scale(.97);opacity:.9}
+.act-btn:disabled{opacity:.6}
+.btn-dist{background:linear-gradient(90deg,#10b981,#0d9488)}
+.btn-clr{background:linear-gradient(90deg,#ef4444,#dc2626)}
+
+/* STATS */
+.stats-row{display:flex;gap:10px;padding:14px}
+.stat-box{flex:1;text-align:center;padding:10px 6px;background:var(--gray-50);border-radius:14px}
+.stat-num{font-size:1.55rem;font-weight:800;color:var(--green-dark);line-height:1}
+.stat-lbl{font-size:.68rem;color:var(--gray-600);margin-top:4px}
+
+/* COMP DIST INFO */
+.comp-info{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.76rem;color:#065f46}
+.comp-info strong{font-weight:800}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:30px 20px;color:var(--gray-600)}
+.empty-state i{font-size:2.4rem;margin-bottom:10px;opacity:.5;display:block}
+.empty-state p{font-size:.84rem}
+
+/* ══ LEAVES ══ */
+.ftab-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.ftab-bar::-webkit-scrollbar{height:0}
+.ftab{padding:7px 14px;border-radius:30px;font-size:.74rem;font-weight:700;border:2px solid var(--gray-200);
+  background:white;color:var(--gray-600);white-space:nowrap;font-family:'Cairo',sans-serif;transition:.2s;cursor:pointer}
+.ftab.active{background:var(--green);border-color:var(--green);color:white}
+.leave-card{background:var(--white);border-radius:18px;padding:13px;margin-bottom:10px;
+  box-shadow:var(--shadow);border-right:4px solid var(--gray-200)}
+.leave-card.pending{border-right-color:#f97316}
+.leave-card.approved{border-right-color:#10b981}
+.leave-card.rejected{border-right-color:#ef4444}
+.l-type-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:30px;font-size:.67rem;font-weight:700}
+.l-status{padding:4px 12px;border-radius:30px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.l-st-pending{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.l-st-approved{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.l-st-rejected{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.leave-act-btn{padding:7px;border:none;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+.leave-act-btn:active{transform:scale(.96)}
+.l-approve{background:#d1fae5;color:#059669}
+.l-reject{background:#fee2e2;color:#dc2626}
+.l-delete{background:var(--gray-100);color:var(--gray-600)}
+.reject-inline{background:#fff5f5;border:1px solid #fecaca;border-radius:12px;padding:10px;margin-top:8px}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:4px}
+</style>
 </head>
 <body>
-    <h1>مرحباً بالعالم!</h1>
-    <p>هذا موقعي المجاني على GitHub Pages</p>
+<div id="app">
+
+<!-- TOAST -->
+<div class="toast-msg" :class="{show:toastVis,success:toastType==='success',error:toastType==='error',info:toastType==='info'}">
+  <i :class="toastIcon"></i> {{ toastMsg }}
+</div>
+
+<!-- SPLASH -->
+<div v-if="showSplash" class="splash" :class="{hide:splashHide}">
+  <div class="splash-emb">🏥</div>
+  <div class="splash-title">نظام المناوبات الذكي</div>
+  <div class="splash-sub">مستشفى عبري — سلطنة عمان</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div v-if="!isLoggedIn && !showSplash" class="login-wrapper">
+  <div class="login-card animate-in">
+    <div class="login-header">
+      <div class="login-emblem">🇴🇲</div>
+      <h1>نظام المناوبات الذكي</h1>
+      <p>مستشفى عبري — سلطنة عمان</p>
+    </div>
+    <div v-if="loginErr" class="login-err"><i class="fas fa-exclamation-triangle"></i> {{ loginErr }}</div>
+    <div class="inp-group">
+      <label class="inp-label">اسم المستخدم</label>
+      <input class="inp" v-model="loginUser" @keyup.enter="login" placeholder="✍🏻" autocomplete="username" autocorrect="off" autocapitalize="off">
+    </div>
+    <div class="inp-group">
+      <label class="inp-label">كلمة المرور</label>
+      <input type="password" class="inp" v-model="loginPass" @keyup.enter="login" placeholder="••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" @click="login" :disabled="loading">
+      <i class="fas" :class="loading?'fa-spinner fa-spin':'fa-arrow-left'"></i>
+      {{ loading ? 'جاري التحقق...' : 'دخول' }}
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div v-if="isLoggedIn">
+  <div class="top-bar">
+    <div class="flag-bar"></div>
+    <div class="hdr-glow"></div>
+    <div class="top-cont">
+      <div class="brand">
+        <div class="brand-emb">🏥</div>
+        <div>
+          <div class="hosp-name">مستشفى عبري</div>
+          <div class="sys-name">
+            <span class="sys-dot" :class="{syncing:syncingCloud}"></span>
+            <span v-if="syncingCloud">جاري التحقق...</span>
+            <span v-else>نظام المناوبات الذكي</span>
+          </div>
+        </div>
+      </div>
+      <div class="user-pill">
+        <div class="u-avatar"><i class="fas" :class="currentUser.role==='admin'?'fa-user-shield':'fa-user-md'"></i></div>
+        <div>
+          <div class="u-name">{{ currentUser.full_name }}</div>
+          <div class="u-role">{{ currentUser.role==='admin'?'مدير النظام':'موظف' }}</div>
+        </div>
+        <button class="logout-btn" @click="logout"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- ── SCHEDULE ── -->
+    <div v-if="activeTab==='schedule'">
+      <div class="week-nav">
+        <button class="wk-btn" @click="changeWeek(-1)"><i class="fas fa-chevron-right"></i> السابق</button>
+        <div class="wk-range">{{ weekRange }}</div>
+        <button class="wk-btn" @click="changeWeek(1)">التالي <i class="fas fa-chevron-left"></i></button>
+      </div>
+      <div class="wa-bar">
+        <span style="font-size:.8rem;font-weight:600"><i class="fab fa-whatsapp fa-lg" style="color:#25D366;margin-left:6px"></i>شارك الجدول الأسبوعي</span>
+        <button class="wa-btn" @click="shareWeekWA"><i class="fab fa-whatsapp"></i> مشاركة</button>
+      </div>
+
+      <div v-for="day in weekDays" :key="day.dateKey" class="day-card animate-in">
+        <div class="day-hdr" :class="{weekend:day.isWeekend}">
+          <div class="day-name">{{ day.name }} <span class="day-date-txt">({{ day.display }})</span></div>
+          <div class="day-badge">{{ day.isWeekend ? '🏖 ويكند' : '🏢 دوام رسمي' }}</div>
+        </div>
+        <div class="day-body">
+          <!-- WEEKEND -->
+          <template v-if="day.isWeekend">
+            <div v-for="p in wkPeriods" :key="p.key" class="s-row s-weekend">
+              <div class="s-icon"><i :class="p.icon"></i></div>
+              <div class="s-details">
+                <div class="s-title">{{ p.label }}</div>
+                <div class="s-time">{{ p.time }}</div>
+                <div class="emp-tags">
+                  <template v-if="resolveEmp(day.dateKey,p.key)">
+                    <span class="e-badge orange" :class="{ov:isOv(day.dateKey,p.key)}">
+                      <i class="fas fa-user"></i> {{ resolveEmp(day.dateKey,p.key).full_name }}
+                      <span v-if="isOv(day.dateKey,p.key)" class="ov-tag">استثناء</span>
+                      <span v-if="isOnApprovedLeave(resolveEmp(day.dateKey,p.key).id, day.dateKey)" class="ov-tag" style="background:rgba(239,68,68,.4)">إجازة!</span>
+                    </span>
+                  </template>
+                  <span v-else class="e-badge muted"><i class="fas fa-minus-circle"></i> غير معين</span>
+                </div>
+              </div>
+            </div>
+          </template>
+          <!-- WEEKDAY -->
+          <template v-else>
+            <div class="s-row s-morning">
+              <div class="s-icon"><i class="fas fa-building"></i></div>
+              <div class="s-details">
+                <div class="s-title">الدوام الرسمي</div>
+                <div class="s-time">07:00 – 13:00</div>
+                <div class="emp-tags">
+                  <template v-if="getMornEmps(day.dateKey).length">
+                    <span v-for="emp in getMornEmps(day.dateKey)" :key="emp.id" class="e-badge">
+                      <i class="fas fa-user"></i> {{ emp.full_name }}
+                    </span>
+                  </template>
+                  <span v-else class="e-badge muted"><i class="fas fa-info-circle"></i> لا يوجد</span>
+                </div>
+              </div>
+            </div>
+            <div v-for="p in wdPeriods" :key="p.key" class="s-row" :class="'s-'+p.class">
+              <div class="s-icon"><i :class="p.icon"></i></div>
+              <div class="s-details">
+                <div class="s-title">{{ p.label }}</div>
+                <div class="s-time">{{ p.time }}</div>
+                <div class="emp-tags">
+                  <template v-if="resolveEmp(day.dateKey,p.key)">
+                    <span class="e-badge" :class="{ov:isOv(day.dateKey,p.key)}">
+                      <i class="fas fa-user"></i> {{ resolveEmp(day.dateKey,p.key).full_name }}
+                      <span v-if="isOv(day.dateKey,p.key)" class="ov-tag">استثناء</span>
+                      <span v-if="isOnApprovedLeave(resolveEmp(day.dateKey,p.key).id, day.dateKey)" class="ov-tag" style="background:rgba(239,68,68,.4)">إجازة!</span>
+                    </span>
+                  </template>
+                  <span v-else class="e-badge muted">غير معين</span>
+                </div>
+              </div>
+            </div>
+            <div v-if="getCompEmps(day.dateKey).length" class="s-row s-comp">
+              <div class="s-icon"><i class="fas fa-gift"></i></div>
+              <div class="s-details">
+                <div class="s-title">إجازة تعويضية</div>
+                <div class="emp-tags">
+                  <span v-for="emp in getCompEmps(day.dateKey)" :key="emp.id" class="e-badge" style="background:#0d9488">
+                    <i class="fas fa-user"></i> {{ emp.full_name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+          <!-- LEAVES IN SCHEDULE (gray) -->
+          <div v-if="getDayLeaves(day.dateKey).length" class="s-row s-leave">
+            <div class="s-icon"><i class="fas fa-calendar-times"></i></div>
+            <div class="s-details">
+              <div class="s-title">في إجازة اليوم</div>
+              <div class="emp-tags">
+                <span v-for="item in getDayLeaves(day.dateKey)" :key="item.emp.id"
+                      class="e-badge"
+                      :style="{background:leaveTypeColor(item.leave.type)+'cc'}">
+                  <i :class="leaveTypeIcon(item.leave.type)"></i>
+                  {{ item.emp.full_name }}
+                  <span class="ov-tag">{{ leaveTypeLabel(item.leave.type) }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY SHIFTS ── -->
+    <div v-if="activeTab==='myShifts'">
+      <div class="admin-card">
+        <div class="admin-hdr">
+          <span><i class="fas fa-calendar-check" style="margin-left:8px"></i>مناوباتي القادمة</span>
+          <button v-if="myShifts.length" class="wa-btn" @click="shareMyWA"><i class="fab fa-whatsapp"></i> جدولي الأسبوعي</button>
+        </div>
+        <div style="padding:12px">
+          <div v-if="!myShifts.length" class="empty-state">
+            <i class="fas fa-hourglass-half"></i><p>لا توجد مناوبات قادمة</p>
+          </div>
+          <div v-for="s in myShifts" :key="s.id" class="ms-item" :style="{borderRightColor:sColor(s.period)}">
+            <div class="ms-dot" :style="{background:sColor(s.period)}">
+              <i :class="sIcon(s.period)" style="color:white"></i>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="ms-date">{{ fmtDate(s.date) }}</div>
+              <div class="ms-label">
+                <span v-if="s.period==='compensation'">✅ إجازة تعويضية</span>
+                <span v-else>{{ pLabel(s.period) }} ({{ pTime(s.period) }})</span>
+                <span v-if="s.override" style="color:#7c3aed;font-weight:700"> ✏️ استثناء</span>
+              </div>
+            </div>
+            <div class="s-type-badge" :style="{background:sColor(s.period)+'22',color:sColor(s.period)}">
+              {{ sTypeName(s.period) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEAVES TAB ── -->
+    <div v-if="activeTab==='leaves'">
+
+      <!-- EMPLOYEE VIEW -->
+      <template v-if="currentUser.role!=='admin'">
+        <button class="act-btn" style="background:linear-gradient(90deg,#64748b,#475569)" @click="openLeaveModal()">
+          <i class="fas fa-paper-plane"></i> تقديم طلب إجازة جديدة
+        </button>
+
+        <div class="admin-card">
+          <div class="admin-hdr">
+            <span><i class="fas fa-calendar-times" style="margin-left:8px"></i>إجازاتي ({{ myLeaves.length }})</span>
+          </div>
+          <div style="padding:12px">
+            <div v-if="!myLeaves.length" class="empty-state">
+              <i class="fas fa-calendar-check"></i>
+              <p>لم تقدم أي طلب إجازة بعد</p>
+            </div>
+            <div v-for="leave in myLeaves" :key="leave.id"
+                 class="leave-card" :class="leave.status">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0"
+                     :style="{background:leaveTypeColor(leave.type)+'22'}">
+                  <i :class="leaveTypeIcon(leave.type)" :style="{color:leaveTypeColor(leave.type),'font-size':'1.1rem'}"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:800;font-size:.86rem">{{ leaveTypeLabel(leave.type) }}</div>
+                  <div style="font-size:.7rem;color:var(--gray-600)">
+                    {{ fmtDate(leave.startDate) }} ← {{ fmtDate(leave.endDate) }}
+                    <span style="font-weight:700;color:var(--green-dark)"> ({{ leaveDays(leave.startDate,leave.endDate) }} يوم)</span>
+                  </div>
+                </div>
+                <div :class="'l-status l-st-'+leave.status">{{ leaveStatusLabel(leave.status) }}</div>
+              </div>
+              <div v-if="leave.note" style="font-size:.73rem;color:var(--gray-600);background:var(--gray-50);padding:6px 10px;border-radius:10px;margin-bottom:6px">
+                📝 {{ leave.note }}
+              </div>
+              <div v-if="leave.rejectReason" style="font-size:.73rem;color:#dc2626;background:#fef2f2;padding:6px 10px;border-radius:10px;margin-bottom:6px">
+                <i class="fas fa-times-circle" style="margin-left:4px"></i>سبب الرفض: {{ leave.rejectReason }}
+              </div>
+              <div v-if="leave.reviewedBy && leave.status!=='pending'" style="font-size:.67rem;color:var(--gray-600);margin-bottom:6px">
+                <i class="fas fa-user-check" style="color:#0284c7;margin-left:4px"></i>
+                راجعه: {{ leave.reviewedBy }} — {{ leave.reviewedAt }}
+              </div>
+              <div v-if="leave.status==='pending'" style="margin-top:4px">
+                <button class="leave-act-btn l-delete" @click="deleteLeave(leave.id)">
+                  <i class="fas fa-times"></i> إلغاء الطلب
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ADMIN VIEW -->
+      <template v-else>
+        <button class="act-btn" style="background:linear-gradient(90deg,#64748b,#475569);margin-bottom:10px" @click="openLeaveModal()">
+          <i class="fas fa-calendar-plus"></i> تسجيل إجازة لموظف
+        </button>
+
+        <!-- Pending Alert -->
+        <div v-if="pendingLeaves.length" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:16px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;background:#f97316;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="fas fa-bell" style="color:white;font-size:1.1rem"></i>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:.86rem;color:#c2410c">{{ pendingLeaves.length }} طلب إجازة بانتظار المراجعة</div>
+            <div style="font-size:.72rem;color:#92400e">يرجى مراجعة الطلبات أدناه</div>
+          </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="ftab-bar">
+          <button class="ftab" :class="{active:leavesFilter==='all'}" @click="leavesFilter='all'">الكل ({{ leaves.length }})</button>
+          <button class="ftab" :class="{active:leavesFilter==='pending'}" @click="leavesFilter='pending'" style="position:relative">
+            معلق
+            <span v-if="pendingLeaves.length" style="display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:white;border-radius:50%;width:16px;height:16px;font-size:.6rem;font-weight:800;margin-right:4px">{{ pendingLeaves.length }}</span>
+          </button>
+          <button class="ftab" :class="{active:leavesFilter==='approved'}" @click="leavesFilter='approved'">معتمد</button>
+          <button class="ftab" :class="{active:leavesFilter==='rejected'}" @click="leavesFilter='rejected'">مرفوض</button>
+        </div>
+
+        <!-- Employee Filter -->
+        <div style="margin-bottom:12px">
+          <select class="form-select" v-model="leavesEmpFilter" style="border-radius:18px;border:2px solid var(--gray-200);font-family:'Cairo';font-size:.82rem;padding:9px 14px">
+            <option value="">جميع الموظفين</option>
+            <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.full_name }}</option>
+          </select>
+        </div>
+
+        <div v-if="!filteredLeaves.length" class="empty-state" style="background:white;border-radius:18px;padding:30px">
+          <i class="fas fa-calendar-check"></i>
+          <p>لا توجد إجازات في هذا التصنيف</p>
+        </div>
+
+        <div v-for="leave in filteredLeaves" :key="leave.id"
+             class="leave-card" :class="leave.status">
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+            <div class="emp-av" style="flex-shrink:0">
+              <i class="fas fa-user-nurse"></i>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:800;font-size:.86rem">{{ leave.empName }}</div>
+              <span class="l-type-pill" :style="{background:leaveTypeColor(leave.type)+'22',color:leaveTypeColor(leave.type)}">
+                <i :class="leaveTypeIcon(leave.type)"></i> {{ leaveTypeLabel(leave.type) }}
+              </span>
+            </div>
+            <div :class="'l-status l-st-'+leave.status">{{ leaveStatusLabel(leave.status) }}</div>
+            <button class="icon-btn" @click="deleteLeave(leave.id)" title="حذف">
+              <i class="fas fa-trash-alt" style="color:var(--red)"></i>
+            </button>
+          </div>
+
+          <div style="font-size:.76rem;color:var(--gray-600);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <i class="fas fa-calendar-day" style="color:#0284c7"></i>
+            <span>{{ fmtDate(leave.startDate) }}</span>
+            <i class="fas fa-arrow-left" style="font-size:.6rem"></i>
+            <span>{{ fmtDate(leave.endDate) }}</span>
+            <span style="font-weight:800;color:var(--green-dark);background:var(--green-light);padding:2px 8px;border-radius:20px">{{ leaveDays(leave.startDate,leave.endDate) }} يوم</span>
+          </div>
+
+          <div v-if="leave.note" style="font-size:.73rem;color:var(--gray-600);background:var(--gray-50);padding:6px 10px;border-radius:10px;margin-bottom:6px">
+            📝 {{ leave.note }}
+          </div>
+          <div v-if="leave.rejectReason" style="font-size:.73rem;color:#dc2626;background:#fef2f2;padding:6px 10px;border-radius:10px;margin-bottom:6px">
+            <i class="fas fa-times-circle" style="margin-left:4px"></i>سبب الرفض: {{ leave.rejectReason }}
+          </div>
+          <div v-if="leave.reviewedBy" style="font-size:.67rem;color:var(--gray-600);margin-bottom:6px">
+            <i class="fas fa-user-check" style="color:#0284c7;margin-left:4px"></i>
+            راجعه: {{ leave.reviewedBy }} — {{ leave.reviewedAt }}
+          </div>
+
+          <!-- Approve/Reject Buttons -->
+          <div v-if="leave.status==='pending' && rejectingId!==leave.id" style="display:flex;gap:8px;margin-top:8px">
+            <button class="leave-act-btn l-approve" style="flex:1;justify-content:center;padding:9px" @click="approveLeave(leave.id)">
+              <i class="fas fa-check"></i> موافقة
+            </button>
+            <button class="leave-act-btn l-reject" style="flex:1;justify-content:center;padding:9px" @click="rejectingId=leave.id;rejectNote=''">
+              <i class="fas fa-times"></i> رفض
+            </button>
+          </div>
+
+          <!-- Inline Reject Form -->
+          <div v-if="rejectingId===leave.id" class="reject-inline">
+            <div style="font-size:.76rem;font-weight:700;color:#dc2626;margin-bottom:8px">
+              <i class="fas fa-exclamation-triangle" style="margin-left:4px"></i>سبب الرفض (اختياري)
+            </div>
+            <input type="text" class="form-control mb-2" v-model="rejectNote"
+                   placeholder="مثال: نقص الكادر، طلب مكرر..."
+                   style="border-radius:12px;font-size:.82rem!important">
+            <div style="display:flex;gap:8px">
+              <button @click="rejectLeave(leave.id)"
+                      style="flex:1;padding:8px;background:#ef4444;color:white;border:none;border-radius:12px;font-family:'Cairo';font-weight:700;font-size:.76rem">
+                <i class="fas fa-check"></i> تأكيد الرفض
+              </button>
+              <button @click="rejectingId=null"
+                      style="padding:8px 14px;background:var(--gray-200);border:none;border-radius:12px;font-family:'Cairo';font-weight:700;font-size:.76rem">
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- ── MANAGE (ADMIN) ── -->
+    <div v-if="activeTab==='manage' && currentUser.role==='admin'">
+      <div class="admin-card">
+        <div class="admin-hdr">
+          <span><i class="fas fa-users" style="margin-left:8px"></i>الموظفون ({{ employees.length }})</span>
+          <button class="wa-btn" style="background:var(--green)" @click="openEmpModal()">+ إضافة موظف</button>
+        </div>
+        <div>
+          <div v-for="emp in employees" :key="emp.id" class="emp-row">
+            <div class="emp-av"><i class="fas fa-user-nurse"></i></div>
+            <div style="flex:1;min-width:0">
+              <div class="emp-name">{{ emp.full_name }}</div>
+              <div class="emp-creds">👤 {{ emp.username }} &nbsp;🔑 {{ emp.password }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:3px">
+                <span v-if="hasOvs(emp.id)" class="ov-badge">⚡ {{ empOvCount(emp.id) }} استثناء</span>
+                <span v-if="emp.exemptNight" class="res-badge res-night">🌙 معفى ليل</span>
+                <span v-if="emp.exemptWeekend" class="res-badge res-wknd">📅 معفى ويكند</span>
+                <span v-if="empActiveLeave(emp.id)" class="res-badge" style="background:#fef2f2;color:#dc2626">🏖 في إجازة</span>
+              </div>
+            </div>
+            <div class="act-icons">
+              <button class="icon-btn" @click="openEmpModal(emp)" title="تعديل البيانات">
+                <i class="fas fa-edit" style="color:var(--blue)"></i>
+              </button>
+              <button class="icon-btn" @click="openRestrictModal(emp)" title="صلاحيات المناوبة">
+                <i class="fas fa-shield-alt" style="color:#0284c7"></i>
+              </button>
+              <button class="icon-btn" @click="openOvModal(emp)" title="استثناء مناوبة">
+                <i class="fas fa-calendar-plus" style="color:#7c3aed"></i>
+              </button>
+              <button class="icon-btn" @click="shareEmpWA(emp)" title="مشاركة جدوله">
+                <i class="fab fa-whatsapp" style="color:#25D366"></i>
+              </button>
+              <button class="icon-btn" @click="delEmp(emp.id)">
+                <i class="fas fa-trash-alt" style="color:var(--red)"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-hdr">📅 توزيع الإجازات التعويضية</div>
+        <div style="padding:14px">
+          <div class="comp-info">
+            <strong>🗓 كيفية توزيع تعويضات الويكند:</strong><br>
+            كل أسبوع يعمل 8 موظفين في الويكند (4 جمعة + 4 سبت).<br>
+            يحصلون على إجازة تعويضية الأسبوع التالي:
+            <br><br>
+            الأحد: <strong>2 موظفين</strong> | الاثنين: <strong>1</strong> | الثلاثاء: <strong>1</strong> | الأربعاء: <strong>2</strong> | الخميس: <strong>2</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-hdr">📊 إحصائيات</div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-num">{{ employees.length }}</div><div class="stat-lbl">موظفين</div></div>
+          <div class="stat-box"><div class="stat-num">{{ shifts.length }}</div><div class="stat-lbl">مناوبة</div></div>
+          <div class="stat-box"><div class="stat-num">{{ overrides.length }}</div><div class="stat-lbl">استثناء</div></div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:#f97316">{{ pendingLeaves.length }}</div>
+            <div class="stat-lbl">إجازة معلقة</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="act-btn btn-dist" @click="autoDistribute" :disabled="isDistributing">
+        <i class="fas" :class="isDistributing?'fa-spinner fa-spin':'fa-magic'"></i>
+        {{ isDistributing ? 'جاري التوزيع الدوراني...' : 'توزيع دوراني عادل (سنة كاملة)' }}
+      </button>
+      <button class="act-btn btn-clr" @click="clearAll">
+        <i class="fas fa-trash-alt"></i> مسح جميع المناوبات والاستثناءات
+      </button>
+    </div>
+
+    <!-- ── FAIRNESS ── -->
+    <div v-if="activeTab==='fairness'">
+      <div class="admin-card">
+        <div class="admin-hdr"><i class="fas fa-chart-line" style="margin-left:8px"></i>مؤشرات العدالة والتوزيع</div>
+        <div style="padding:14px">
+          <div v-if="!employees.length" class="empty-state">
+            <i class="fas fa-chart-bar"></i><p>لا توجد بيانات</p>
+          </div>
+          <div v-for="emp in employees" :key="emp.id" class="f-item">
+            <div class="f-name">{{ emp.full_name }}</div>
+            <div class="f-bar"><div class="f-fill" :style="{width:fairPct(emp.id)+'%'}"></div></div>
+            <div class="f-count">{{ empSCnt(emp.id) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-hdr">🌙 مناوبات ليلية لكل موظف</div>
+        <div style="padding:14px">
+          <div v-for="emp in employees" :key="emp.id" class="f-item">
+            <div class="f-name">{{ emp.full_name }}</div>
+            <div class="f-bar">
+              <div class="f-fill" :style="{width:nightPct(emp.id)+'%',background:'linear-gradient(90deg,#7c3aed,#4c1d95)'}"></div>
+            </div>
+            <div class="f-count" style="color:#7c3aed">{{ empNightCnt(emp.id) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-hdr">🏖 مناوبات ويكند لكل موظف</div>
+        <div style="padding:14px">
+          <div v-for="emp in employees" :key="emp.id" class="f-item">
+            <div class="f-name">{{ emp.full_name }}</div>
+            <div class="f-bar">
+              <div class="f-fill" :style="{width:wkndPct(emp.id)+'%',background:'linear-gradient(90deg,#d97706,#ea580c)'}"></div>
+            </div>
+            <div class="f-count" style="color:#d97706">{{ empWkndCnt(emp.id) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bot-nav">
+    <button class="nav-tab" :class="{active:activeTab==='schedule'}" @click="activeTab='schedule'">
+      <i class="fas fa-calendar-alt"></i><span>الجدول</span>
+    </button>
+    <button class="nav-tab" :class="{active:activeTab==='myShifts'}" @click="activeTab='myShifts'">
+      <i class="fas fa-user-clock"></i><span>مناوباتي</span>
+    </button>
+    <button class="nav-tab" :class="{active:activeTab==='leaves'}" @click="activeTab='leaves'" style="position:relative">
+      <i class="fas fa-calendar-times"></i>
+      <span>الإجازات</span>
+      <span v-if="currentUser.role==='admin' && pendingLeaves.length" class="nav-badge">{{ pendingLeaves.length }}</span>
+    </button>
+    <button class="nav-tab" :class="{active:activeTab==='fairness'}" @click="activeTab='fairness'">
+      <i class="fas fa-chart-line"></i><span>العدالة</span>
+    </button>
+    <button v-if="currentUser.role==='admin'" class="nav-tab" :class="{active:activeTab==='manage'}" @click="activeTab='manage'">
+      <i class="fas fa-users-cog"></i><span>إدارة</span>
+    </button>
+  </div>
+
+  <!-- EMP MODAL -->
+  <div class="modal fade modal-custom" id="empModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingEmp ? 'تعديل بيانات الموظف' : 'إضافة موظف جديد' }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-user-edit"></i> البيانات الأساسية</div>
+            <label class="form-label">الاسم الكامل</label>
+            <input type="text" class="form-control mb-3" v-model="empForm.full_name" placeholder="الموظف 1">
+            <label class="form-label">اسم المستخدم</label>
+            <input type="text" class="form-control mb-3" v-model="empForm.username" placeholder="emp1" autocorrect="off" autocapitalize="off">
+            <label class="form-label">كلمة المرور</label>
+            <input type="text" class="form-control" v-model="empForm.password" placeholder="123">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button class="btn btn-success" @click="saveEmp">حفظ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESTRICT MODAL -->
+  <div class="modal fade modal-custom" id="restrictModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#1e3a5f,#1e40af)">
+          <h5 class="modal-title"><i class="fas fa-shield-alt" style="margin-left:8px"></i>صلاحيات التوزيع — {{ restrictForm.empName }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:10px 14px;margin-bottom:14px;font-size:.76rem;color:#1e40af">
+            <i class="fas fa-info-circle" style="margin-left:6px"></i>
+            هذه الإعدادات تؤثر على التوزيع التلقائي عند الضغط على "توزيع دوراني عادل".
+          </div>
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-moon" style="color:#7c3aed"></i> إعفاء من المناوبة الليلية</div>
+            <label class="toggle-row">
+              <span>معفى من الليل (لا يُعيَّن في 00:00 – 06:00)</span>
+              <div class="toggle-wrap">
+                <input type="checkbox" v-model="restrictForm.exemptNight">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-calendar-week" style="color:#d97706"></i> إعفاء من الويكند</div>
+            <label class="toggle-row">
+              <span>معفى من الويكند (لا يُعيَّن في الجمعة / السبت)</span>
+              <div class="toggle-wrap">
+                <input type="checkbox" v-model="restrictForm.exemptWeekend">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+          <div v-if="restrictForm.exemptNight || restrictForm.exemptWeekend" style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;font-size:.75rem;color:#92400e">
+            <i class="fas fa-exclamation-triangle" style="margin-left:6px;color:#d97706"></i>
+            <strong>تنبيه:</strong> بعد الحفظ، أعد تشغيل التوزيع التلقائي لتطبيق الإعفاءات.
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button class="btn" style="background:linear-gradient(90deg,#1e40af,#1e3a5f);color:white;border-radius:18px;font-family:'Cairo',sans-serif;font-weight:700;padding:8px 22px" @click="saveRestrictions">
+            <i class="fas fa-save"></i> حفظ الصلاحيات
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERRIDE MODAL -->
+  <div class="modal fade modal-custom" id="ovModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#4c1d95,#7c3aed)">
+          <h5 class="modal-title">⚡ استثناء مناوبة — {{ ovForm.empName }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="padding:16px;max-height:75vh;overflow-y:auto">
+          <!-- Leave Warning -->
+          <div v-if="ovForm.date && isOnApprovedLeave(ovForm.empId, ovForm.date)"
+               style="background:#fefce8;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:.75rem;color:#92400e">
+            <i class="fas fa-exclamation-triangle" style="margin-left:6px;color:#d97706"></i>
+            <strong>تنبيه:</strong> هذا الموظف في إجازة معتمدة في هذا التاريخ. يمكن تجاوز ذلك لكن يُرجى التأكد.
+          </div>
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-calendar-day" style="color:#7c3aed"></i> اختر التاريخ</div>
+            <input type="date" class="form-control" v-model="ovForm.date">
+          </div>
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-clock" style="color:#7c3aed"></i> الفترة المراد تعديلها</div>
+            <select class="form-select" v-model="ovForm.period">
+              <option value="">— اختر الفترة —</option>
+              <optgroup label="أيام الأسبوع (الدوام الرسمي)">
+                <option value="afternoon">المناوبة الأولى — 14:00 – 20:00</option>
+                <option value="evening">المناوبة الثانية — 17:00 – 23:00</option>
+                <option value="night">المناوبة الليلية — 00:00 – 06:00</option>
+                <option value="compensation">إجازة تعويضية</option>
+              </optgroup>
+              <optgroup label="ويكند (جمعة / سبت)">
+                <option value="weekend_morning">ويكند صباحي — 07:00 – 13:00</option>
+                <option value="weekend_afternoon">ويكند مناوبة أولى — 14:00 – 20:00</option>
+                <option value="weekend_evening">ويكند مناوبة ثانية — 17:00 – 23:00</option>
+                <option value="weekend_night">ويكند ليلي — 00:00 – 06:00</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-exchange-alt" style="color:#7c3aed"></i> نوع الاستثناء</div>
+            <div class="radio-grp">
+              <label class="radio-option" :class="{selected:ovForm.action==='assign'}" @click="ovForm.action='assign'">
+                <i class="fas fa-user-plus" style="color:var(--green)"></i>
+                <div><div>تعيين هذا الموظف في هذه الفترة</div>
+                  <div style="font-size:.7rem;font-weight:400;color:var(--gray-600)">يحل محل الموظف المعين أصلاً</div></div>
+              </label>
+              <label class="radio-option" :class="{selected:ovForm.action==='remove',remove:ovForm.action==='remove'}" @click="ovForm.action='remove'">
+                <i class="fas fa-user-times" style="color:var(--red)"></i>
+                <div><div>إزالة هذا الموظف من هذه الفترة</div>
+                  <div style="font-size:.7rem;font-weight:400;color:var(--gray-600)">إجازة مرضية / تغيير طارئ</div></div>
+              </label>
+              <label class="radio-option" :class="{selected:ovForm.action==='revert',revert:ovForm.action==='revert'}" @click="ovForm.action='revert'">
+                <i class="fas fa-undo" style="color:#0284c7"></i>
+                <div><div>إعادة للجدول الأصلي</div>
+                  <div style="font-size:.7rem;font-weight:400;color:var(--gray-600)">حذف الاستثناء وإعادة الحساب الأصلي</div></div>
+              </label>
+            </div>
+          </div>
+          <div v-if="ovForm.action!=='revert'" class="m-section">
+            <div class="m-sec-title"><i class="fas fa-sticky-note" style="color:#7c3aed"></i> ملاحظة (اختياري)</div>
+            <textarea class="form-control" v-model="ovForm.note" rows="2" placeholder="سبب الاستثناء، إجازة مرضية، بدل..."></textarea>
+          </div>
+          <div v-if="ovForm.date && ovForm.period" class="m-section">
+            <div class="m-sec-title"><i class="fas fa-info-circle" style="color:#0284c7"></i> المعين حالياً في هذه الفترة</div>
+            <div style="background:white;border-radius:10px;padding:10px;font-size:.8rem">
+              <template v-if="resolveEmp(ovForm.date, ovForm.period)">
+                <span style="font-weight:700;color:#059669"><i class="fas fa-user"></i> {{ resolveEmp(ovForm.date, ovForm.period).full_name }}</span>
+                <span v-if="isOv(ovForm.date, ovForm.period)" style="color:#7c3aed;font-weight:700;margin-right:8px"> ✏️ استثناء مسجل</span>
+              </template>
+              <span v-else style="color:var(--gray-600)">لا يوجد موظف معين</span>
+            </div>
+          </div>
+          <div v-if="empOvs(ovForm.empId).length" class="m-section">
+            <div class="m-sec-title"><i class="fas fa-list-alt" style="color:#7c3aed"></i> الاستثناءات المسجلة لهذا الموظف</div>
+            <div v-for="ov in empOvs(ovForm.empId)" :key="ov.id" class="ov-list-item">
+              <div>
+                <span style="font-weight:700">📅 {{ ov.date }}</span>
+                <span style="margin:0 6px;color:var(--gray-600)">|</span>
+                <span>{{ pLabel(ov.period) }}</span>
+                <span style="margin:0 6px;color:var(--gray-600)">|</span>
+                <span :style="{color:ov.action==='assign'?'#059669':ov.action==='remove'?'#dc2626':'#0284c7',fontWeight:700}">
+                  {{ ov.action==='assign'?'✅ تعيين':ov.action==='remove'?'❌ إزالة':'🔄 إعادة للأصل' }}
+                </span>
+                <div v-if="ov.note" style="color:var(--gray-600);font-size:.67rem;margin-top:2px">{{ ov.note }}</div>
+              </div>
+              <button class="icon-btn" @click="removeOv(ov.id)"><i class="fas fa-times" style="color:var(--red)"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+          <button class="btn" style="background:linear-gradient(90deg,#7c3aed,#4c1d95);color:white;border-radius:18px;font-family:'Cairo',sans-serif;font-weight:700;padding:8px 20px" @click="saveOv">
+            <i class="fas fa-save"></i>
+            {{ ovForm.action==='revert' ? 'إعادة للجدول الأصلي' : 'حفظ الاستثناء' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAVE MODAL -->
+  <div class="modal fade modal-custom" id="leaveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#475569,#64748b)">
+          <h5 class="modal-title">
+            <i class="fas fa-calendar-times" style="margin-left:8px"></i>
+            {{ currentUser && currentUser.role==='admin' ? 'تسجيل إجازة موظف' : 'تقديم طلب إجازة' }}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="padding:20px;max-height:75vh;overflow-y:auto">
+
+          <!-- Employee selector (admin only) -->
+          <div v-if="currentUser && currentUser.role==='admin'" class="m-section">
+            <div class="m-sec-title"><i class="fas fa-user" style="color:#475569"></i> الموظف</div>
+            <select class="form-select" v-model="leaveForm.empId">
+              <option value="">— اختر الموظف —</option>
+              <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.full_name }}</option>
+            </select>
+          </div>
+
+          <!-- Leave Type -->
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-tag" style="color:#475569"></i> نوع الإجازة</div>
+            <div class="radio-grp">
+              <label v-for="(lt, key) in leaveTypes" :key="key"
+                     class="radio-option"
+                     :class="{selected: leaveForm.type === key}"
+                     @click="leaveForm.type = key">
+                <i :class="lt.icon" :style="{color: lt.color}"></i>
+                <div>
+                  <div>{{ lt.label }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Date Range -->
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-calendar-day" style="color:#475569"></i> الفترة الزمنية</div>
+            <label class="form-label">من تاريخ</label>
+            <input type="date" class="form-control mb-3" v-model="leaveForm.startDate">
+            <label class="form-label">إلى تاريخ</label>
+            <input type="date" class="form-control" v-model="leaveForm.endDate">
+            <div v-if="leaveForm.startDate && leaveForm.endDate && leaveForm.endDate >= leaveForm.startDate"
+                 style="margin-top:8px;font-size:.76rem;color:var(--green-dark);font-weight:700;background:var(--green-light);padding:6px 12px;border-radius:20px;text-align:center">
+              ✅ المدة الإجمالية: {{ leaveDays(leaveForm.startDate, leaveForm.endDate) }} يوم
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="m-section">
+            <div class="m-sec-title"><i class="fas fa-sticky-note" style="color:#475569"></i> ملاحظة (اختياري)</div>
+            <textarea class="form-control" v-model="leaveForm.note" rows="2" placeholder="سبب الإجازة أو أي تفاصيل إضافية..."></textarea>
+          </div>
+
+          <!-- Employee notice -->
+          <div v-if="currentUser && currentUser.role!=='admin'" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 14px;font-size:.75rem;color:#1e40af">
+            <i class="fas fa-info-circle" style="margin-left:6px"></i>
+            سيتم إرسال طلبك للمدير للمراجعة والاعتماد.
+          </div>
+          <div v-else style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;font-size:.75rem;color:#065f46">
+            <i class="fas fa-check-circle" style="margin-left:6px"></i>
+            تسجيل الإجازة من قبل المدير يُعتبر موافقة تلقائية.
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button class="btn" style="background:linear-gradient(90deg,#475569,#334155);color:white;border-radius:18px;font-family:'Cairo',sans-serif;font-weight:700;padding:8px 22px" @click="saveLeave">
+            <i class="fas fa-paper-plane"></i>
+            {{ currentUser && currentUser.role==='admin' ? 'تسجيل الإجازة' : 'تقديم الطلب' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /v-if isLoggedIn -->
+</div><!-- /#app -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+<script>
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+const JB = {
+  key:"$2a$10$lLr9UMF10pwUbHV8NbONLOHTOJwgxdCe5C2SFdNgAvHFEs1yOdzzm",
+  url:"https://api.jsonbin.io/v3/b/69efcb02856a6821897cba6a"
+};
+
+const LS_CACHE = 'shiftCache_v2';
+const LS_LGI   = 'lgi';
+const LS_UID   = 'uid';
+
+/* ── Compress / Decompress ── */
+async function saveCompressed(users, shifts, overrides, leaves=[]) {
+  try {
+    const jsonString = JSON.stringify({ users, shifts, overrides, leaves });
+    const compressed = pako.deflate(jsonString);
+    const base64 = btoa(String.fromCharCode.apply(null, compressed));
+    await fetch(JB.url, {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', 'X-Master-Key':JB.key },
+      body: JSON.stringify({ _compressed:true, data:base64 })
+    });
+    return true;
+  } catch(e) { console.error('Save error:', e); return false; }
+}
+
+async function loadCompressed() {
+  try {
+    const r = await fetch(JB.url + '/latest', { headers:{ 'X-Master-Key':JB.key } });
+    if (!r.ok) return null;
+    const res = await r.json();
+    if (res.record?._compressed === true && res.record.data) {
+      const bytes = Uint8Array.from(atob(res.record.data), c => c.charCodeAt(0));
+      const str   = pako.inflate(bytes, { to:'string' });
+      return JSON.parse(str);
+    }
+    if (res.record?.users) return res.record;
+  } catch(e) { console.error('Load error:', e); }
+  return null;
+}
+
+function saveLocalCache(users, shifts, overrides, leaves=[]) {
+  try {
+    localStorage.setItem(LS_CACHE, JSON.stringify({ users, shifts, overrides, leaves, ts: Date.now() }));
+  } catch(e) {}
+}
+
+function loadLocalCache() {
+  try {
+    const s = localStorage.getItem(LS_CACHE);
+    return s ? JSON.parse(s) : null;
+  } catch(e) { return null; }
+}
+
+/* ── Constants ── */
+const WD = {
+  afternoon:{ key:'afternoon', label:'المناوبة الأولى',  time:'14:00 – 20:00', icon:'fas fa-sun',        class:'afternoon' },
+  evening:  { key:'evening',   label:'المناوبة الثانية', time:'17:00 – 23:00', icon:'fas fa-moon',       class:'evening'   },
+  night:    { key:'night',     label:'المناوبة الليلية', time:'00:00 – 06:00', icon:'fas fa-cloud-moon', class:'night'     }
+};
+const WK = {
+  weekend_morning:  { key:'weekend_morning',   label:'ويكند صباحي',       time:'07:00 – 13:00', icon:'fas fa-sun',        class:'weekend' },
+  weekend_afternoon:{ key:'weekend_afternoon', label:'ويكند مناوبة أولى', time:'14:00 – 20:00', icon:'fas fa-sun',        class:'weekend' },
+  weekend_evening:  { key:'weekend_evening',   label:'ويكند مناوبة ثانية',time:'17:00 – 23:00', icon:'fas fa-moon',       class:'weekend' },
+  weekend_night:    { key:'weekend_night',     label:'ويكند ليلي',        time:'00:00 – 06:00', icon:'fas fa-cloud-moon', class:'weekend' }
+};
+
+const LEAVE_TYPES = {
+  annual:    { label:'إجازة سنوية',    icon:'fas fa-umbrella-beach',   color:'#10b981' },
+  maternity: { label:'إجازة أمومة',    icon:'fas fa-baby',             color:'#ec4899' },
+  sick:      { label:'إجازة مرضية',    icon:'fas fa-thermometer-half', color:'#ef4444' },
+  day_off:   { label:'راحة إضافية',    icon:'fas fa-couch',            color:'#3b82f6' }
+};
+
+const WK_SLOTS   = ['weekend_morning','weekend_afternoon','weekend_evening','weekend_night'];
+const COMP_PATTERN = [2, 1, 1, 2, 2];
+const ADMIN      = { id:0, username:'admin', password:'admin123', full_name:'مدير النظام', role:'admin' };
+const DAYS       = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+let nextId = 16, sId = 1, oId = 1, lId = 1;
+const fmt  = d => d.toISOString().split('T')[0];
+const addD = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const sunOf = d  => { const s = new Date(d); s.setDate(d.getDate()-d.getDay()); s.setHours(0,0,0,0); return s; };
+
+/* ════════════════════════════════════════
+   VUE
+════════════════════════════════════════ */
+new Vue({
+  el:'#app',
+  data:{
+    showSplash: true,
+    splashHide: false,
+    isLoggedIn:false, currentUser:null,
+    users:[], shifts:[], overrides:[], leaves:[],
+    loginUser:'', loginPass:'', loginErr:'', loading:false,
+    activeTab:'schedule', weekOffset:0, isDistributing:false,
+    syncingCloud: false,
+
+    editingEmp:null, empForm:{ full_name:'', username:'', password:'' },
+    restrictForm:{ empId:null, empName:'', exemptNight:false, exemptWeekend:false },
+    ovForm:{ empId:null, empName:'', date:'', period:'', action:'assign', note:'' },
+
+    /* LEAVES */
+    leaveTypes: LEAVE_TYPES,
+    leaveForm:{ empId:'', type:'', startDate:'', endDate:'', note:'' },
+    leavesFilter: 'all',
+    leavesEmpFilter: '',
+    rejectingId: null,
+    rejectNote: '',
+
+    toastVis:false, toastMsg:'', toastType:'success', toastIcon:'fas fa-check-circle', _tt:null
+  },
+
+  computed:{
+    employees(){ return this.users.filter(u=>u.role==='employee'); },
+    wdPeriods(){ return Object.values(WD); },
+    wkPeriods(){ return Object.values(WK); },
+
+    weekDays(){
+      const sun = addD(sunOf(new Date()), this.weekOffset*7);
+      return Array.from({length:7},(_,i)=>{
+        const d = addD(sun,i);
+        return { name:DAYS[d.getDay()], display:`${d.getDate()}/${d.getMonth()+1}`, dateKey:fmt(d), isWeekend:(d.getDay()===5||d.getDay()===6) };
+      });
+    },
+
+    weekRange(){
+      const d = this.weekDays;
+      return d.length ? `${d[0].display} — ${d[6].display}` : '';
+    },
+
+    /* LEAVES COMPUTED */
+    pendingLeaves(){ return this.leaves.filter(l=>l.status==='pending'); },
+
+    myLeaves(){
+      if (!this.currentUser) return [];
+      return this.leaves.filter(l=>l.empId===this.currentUser.id)
+        .sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+    },
+
+    filteredLeaves(){
+      let l = [...this.leaves];
+      if (this.leavesFilter !== 'all') l = l.filter(x=>x.status===this.leavesFilter);
+      if (this.leavesEmpFilter) l = l.filter(x=>x.empId==this.leavesEmpFilter);
+      return l.sort((a,b)=>{
+        // pending first, then by date
+        if (a.status==='pending' && b.status!=='pending') return -1;
+        if (b.status==='pending' && a.status!=='pending') return 1;
+        return b.createdAt.localeCompare(a.createdAt);
+      });
+    },
+
+    myShifts(){
+      if (!this.currentUser) return [];
+      const today = fmt(new Date()), uid = this.currentUser.id, result = [];
+      const sun = sunOf(new Date());
+      for (let w=0; w<8; w++){
+        const wSun = addD(sun, w*7);
+        for (let i=0; i<7; i++){
+          const d=addD(wSun,i), dk=fmt(d);
+          if (dk<today) continue;
+          const isWk = (d.getDay()===5||d.getDay()===6);
+          const periods = isWk ? Object.keys(WK) : ['afternoon','evening','night','compensation'];
+          periods.forEach(p=>{
+            if (p==='compensation'){
+              if (this.getCompEmps(dk).find(e=>e.id===uid))
+                result.push({ id:`${dk}-comp-${uid}`, date:dk, period:'compensation', userId:uid });
+            } else {
+              const emp = this.resolveEmp(dk,p);
+              if (emp && emp.id===uid)
+                result.push({ id:`${dk}-${p}`, date:dk, period:p, userId:uid, override:this.isOv(dk,p) });
+            }
+          });
+          if (!isWk && this.getMornEmps(dk).find(e=>e.id===uid))
+            result.push({ id:`${dk}-morning-${uid}`, date:dk, period:'morning', userId:uid });
+        }
+      }
+      return result.sort((a,b)=>a.date.localeCompare(b.date));
+    }
+  },
+
+  methods:{
+    /* TOAST */
+    toast(msg, type='success'){
+      if (this._tt) clearTimeout(this._tt);
+      this.toastMsg=msg; this.toastType=type;
+      this.toastIcon = type==='success'?'fas fa-check-circle':type==='error'?'fas fa-exclamation-triangle':'fas fa-info-circle';
+      this.toastVis=true;
+      this._tt=setTimeout(()=>this.toastVis=false, 3200);
+    },
+
+    /* NORMALISE */
+    normaliseData(data){
+      if (!data || !data.users) return;
+      this.users    = data.users.map(u=>({ exemptNight:false, exemptWeekend:false, ...u }));
+      this.shifts   = data.shifts   || [];
+      this.overrides= data.overrides|| [];
+      this.leaves   = data.leaves   || [];
+      nextId = Math.max(...this.users.map(u=>u.id), 0) + 1;
+      sId    = this.shifts.length    ? Math.max(...this.shifts.map(s=>+s.id||0),    0)+1 : 1;
+      oId    = this.overrides.length ? Math.max(...this.overrides.map(o=>+o.id||0), 0)+1 : 1;
+      lId    = this.leaves.length    ? Math.max(...this.leaves.map(l=>+l.id||0),    0)+1 : 1;
+    },
+
+    /* SYNC */
+    async sync(){
+      await saveCompressed(this.users, this.shifts, this.overrides, this.leaves);
+      saveLocalCache(this.users, this.shifts, this.overrides, this.leaves);
+    },
+
+    async bgCloudSync(){
+      this.syncingCloud = true;
+      try {
+        const cloud = await loadCompressed();
+        if (cloud && cloud.users){
+          this.normaliseData(cloud);
+          if (this.currentUser){
+            const u = this.users.find(x => x.id == this.currentUser.id);
+            if (u) this.currentUser = u;
+            else { this.logout(); return; }
+          }
+          saveLocalCache(this.users, this.shifts, this.overrides, this.leaves);
+        }
+      } catch(e){ console.warn('bgCloudSync failed', e); }
+      this.syncingCloud = false;
+    },
+
+    /* RESOLVE */
+    resolveEmp(date,period){
+      const ovs = this.overrides.filter(o=>o.date===date && o.period===period);
+      if (ovs.length){
+        const last = ovs[ovs.length-1];
+        if (last.action==='remove') return null;
+        if (last.action==='assign') return this.users.find(u=>u.id===last.empId)||null;
+      }
+      const s = this.shifts.find(x=>x.date===date && x.period===period);
+      return s ? this.users.find(u=>u.id===s.userId)||null : null;
+    },
+    isOv(date,period){ return this.overrides.some(o=>o.date===date && o.period===period); },
+
+    getMornEmps(date){
+      const busy = new Set();
+      ['afternoon','evening','night'].forEach(p=>{ const e=this.resolveEmp(date,p); if(e) busy.add(e.id); });
+      this.getCompEmps(date).forEach(e=>busy.add(e.id));
+      // Exclude employees on approved leave
+      this.leaves.filter(l=>l.status==='approved' && l.startDate<=date && l.endDate>=date)
+        .forEach(l=>busy.add(l.empId));
+      return this.employees.filter(e=>!busy.has(e.id));
+    },
+
+    getCompEmps(date){
+      const baseIds = this.shifts.filter(s=>s.date===date && s.period==='compensation').map(s=>s.userId);
+      const ovA     = this.overrides.filter(o=>o.date===date && o.period==='compensation' && o.action==='assign').map(o=>o.empId);
+      const ovR     = new Set(this.overrides.filter(o=>o.date===date && o.period==='compensation' && o.action==='remove').map(o=>o.empId));
+      return [...new Set([...baseIds,...ovA])].filter(id=>!ovR.has(id)).map(id=>this.users.find(u=>u.id===id)).filter(Boolean);
+    },
+
+    /* ── LEAVE HELPERS ── */
+    isOnApprovedLeave(empId, date){
+      return this.leaves.some(l=>
+        l.status==='approved' && l.empId===empId && l.startDate<=date && l.endDate>=date
+      );
+    },
+
+    empActiveLeave(empId){
+      const today = fmt(new Date());
+      return this.leaves.find(l=>l.status==='approved' && l.empId===empId && l.startDate<=today && l.endDate>=today);
+    },
+
+    getDayLeaves(date){
+      return this.leaves
+        .filter(l=>l.status==='approved' && l.startDate<=date && l.endDate>=date)
+        .map(l=>({ emp:this.users.find(u=>u.id===l.empId), leave:l }))
+        .filter(x=>x.emp);
+    },
+
+    leaveTypeLabel(type){ return LEAVE_TYPES[type]?.label || type; },
+    leaveTypeIcon(type){  return LEAVE_TYPES[type]?.icon  || 'fas fa-calendar-times'; },
+    leaveTypeColor(type){ return LEAVE_TYPES[type]?.color || '#94a3b8'; },
+    leaveStatusLabel(s){  return { pending:'معلق', approved:'معتمد', rejected:'مرفوض' }[s]||s; },
+
+    leaveDays(start, end){
+      if (!start || !end) return 0;
+      const s=new Date(start), e=new Date(end);
+      return Math.max(1, Math.floor((e-s)/(1000*60*60*24))+1);
+    },
+
+    /* ── LEAVE CRUD ── */
+    openLeaveModal(emp=null){
+      const today = fmt(new Date());
+      if (this.currentUser.role==='admin'){
+        this.leaveForm = { empId: emp ? emp.id : '', type:'', startDate:today, endDate:today, note:'' };
+      } else {
+        this.leaveForm = { empId: this.currentUser.id, type:'', startDate:today, endDate:today, note:'' };
+      }
+      new bootstrap.Modal(document.getElementById('leaveModal')).show();
+    },
+
+    async saveLeave(){
+      if (!this.leaveForm.empId)    { this.toast('يرجى اختيار الموظف','error'); return; }
+      if (!this.leaveForm.type)     { this.toast('يرجى اختيار نوع الإجازة','error'); return; }
+      if (!this.leaveForm.startDate||!this.leaveForm.endDate){ this.toast('يرجى تحديد التواريخ','error'); return; }
+      if (this.leaveForm.endDate < this.leaveForm.startDate){ this.toast('تاريخ الانتهاء يجب أن يكون بعد البداية','error'); return; }
+
+      const empId = +this.leaveForm.empId;
+      const emp   = this.users.find(u=>u.id===empId);
+      const isAdmin = this.currentUser.role==='admin';
+
+      this.leaves.push({
+        id:         lId++,
+        empId:      empId,
+        empName:    emp ? emp.full_name : '',
+        type:       this.leaveForm.type,
+        startDate:  this.leaveForm.startDate,
+        endDate:    this.leaveForm.endDate,
+        note:       this.leaveForm.note,
+        status:     isAdmin ? 'approved' : 'pending',
+        createdAt:  fmt(new Date()),
+        reviewedBy: isAdmin ? this.currentUser.full_name : null,
+        reviewedAt: isAdmin ? fmt(new Date()) : null,
+        rejectReason: ''
+      });
+
+      bootstrap.Modal.getInstance(document.getElementById('leaveModal')).hide();
+      await this.sync();
+      this.toast(isAdmin ? '✅ تم تسجيل الإجازة واعتمادها' : '📨 تم إرسال الطلب — بانتظار الموافقة', 'success');
+    },
+
+    async approveLeave(id){
+      const i = this.leaves.findIndex(l=>l.id===id);
+      if (i===-1) return;
+      this.$set(this.leaves, i, {
+        ...this.leaves[i],
+        status:     'approved',
+        reviewedBy: this.currentUser.full_name,
+        reviewedAt: fmt(new Date())
+      });
+      await this.sync();
+      this.toast('✅ تم اعتماد الإجازة', 'success');
+    },
+
+    async rejectLeave(id){
+      const i = this.leaves.findIndex(l=>l.id===id);
+      if (i===-1) return;
+      this.$set(this.leaves, i, {
+        ...this.leaves[i],
+        status:       'rejected',
+        rejectReason: this.rejectNote,
+        reviewedBy:   this.currentUser.full_name,
+        reviewedAt:   fmt(new Date())
+      });
+      this.rejectingId = null;
+      this.rejectNote  = '';
+      await this.sync();
+      this.toast('❌ تم رفض الطلب', 'info');
+    },
+
+    async deleteLeave(id){
+      if (!confirm('هل تريد حذف هذا الطلب؟')) return;
+      this.leaves = this.leaves.filter(l=>l.id!==id);
+      await this.sync();
+      this.toast('تم حذف طلب الإجازة', 'info');
+    },
+
+    /* OVERRIDES */
+    hasOvs(id){ return this.overrides.some(o=>o.empId===id); },
+    empOvCount(id){ return this.overrides.filter(o=>o.empId===id).length; },
+    empOvs(id){ return this.overrides.filter(o=>o.empId===id).sort((a,b)=>a.date.localeCompare(b.date)); },
+
+    openOvModal(emp){
+      this.ovForm={ empId:emp.id, empName:emp.full_name, date:fmt(new Date()), period:'', action:'assign', note:'' };
+      new bootstrap.Modal(document.getElementById('ovModal')).show();
+    },
+    async saveOv(){
+      if (!this.ovForm.date || !this.ovForm.period){ this.toast('يرجى تحديد التاريخ والفترة','error'); return; }
+      this.overrides = this.overrides.filter(o=>!(o.empId===this.ovForm.empId && o.date===this.ovForm.date && o.period===this.ovForm.period));
+      if (this.ovForm.action==='revert'){ await this.sync(); this.toast('🔄 تم إعادة الموظف للجدول الأصلي','success'); return; }
+      this.overrides.push({ id:oId++, empId:this.ovForm.empId, empName:this.ovForm.empName, date:this.ovForm.date, period:this.ovForm.period, action:this.ovForm.action, note:this.ovForm.note });
+      await this.sync();
+      this.toast('✅ تم حفظ الاستثناء','success');
+    },
+    async removeOv(id){ this.overrides=this.overrides.filter(o=>o.id!==id); await this.sync(); this.toast('تم حذف الاستثناء','info'); },
+
+    /* RESTRICTIONS */
+    openRestrictModal(emp){
+      this.restrictForm={ empId:emp.id, empName:emp.full_name, exemptNight:!!emp.exemptNight, exemptWeekend:!!emp.exemptWeekend };
+      new bootstrap.Modal(document.getElementById('restrictModal')).show();
+    },
+    async saveRestrictions(){
+      const i = this.users.findIndex(u=>u.id===this.restrictForm.empId);
+      if (i===-1) return;
+      this.$set(this.users, i, { ...this.users[i], exemptNight:this.restrictForm.exemptNight, exemptWeekend:this.restrictForm.exemptWeekend });
+      bootstrap.Modal.getInstance(document.getElementById('restrictModal')).hide();
+      await this.sync();
+      this.toast('✅ تم حفظ صلاحيات التوزيع','success');
+    },
+
+    /* HELPERS */
+    sColor(p){ return { morning:'#0284c7',afternoon:'#ea580c',evening:'#059669',night:'#7c3aed', weekend_morning:'#d97706',weekend_afternoon:'#d97706',weekend_evening:'#d97706',weekend_night:'#d97706', compensation:'#0d9488' }[p]||'#059669'; },
+    sIcon(p){ if(p.includes('weekend')) return 'fas fa-calendar-week'; if(p==='compensation') return 'fas fa-gift'; if(p==='morning') return 'fas fa-building'; return WD[p]?.icon||'fas fa-clock'; },
+    sTypeName(p){ return { morning:'دوام رسمي',weekend_morning:'ويكند صباحي',weekend_afternoon:'ويكند م.أولى',weekend_evening:'ويكند م.ثانية',weekend_night:'ويكند ليلي',compensation:'تعويضية',afternoon:'م. أولى',evening:'م. ثانية',night:'م. ليلية' }[p]||p; },
+    pLabel(p){ if(p==='compensation') return 'إجازة تعويضية'; if(p==='morning') return 'الدوام الرسمي'; return WD[p]?.label||WK[p]?.label||p; },
+    pTime(p){ if(p==='morning') return '07:00 – 13:00'; return WD[p]?.time||WK[p]?.time||''; },
+    fmtDate(s){ if(!s) return ''; const d=new Date(s); return `${d.getDate()} ${d.toLocaleDateString('ar',{month:'long'})} ${d.getFullYear()}`; },
+    empSCnt(id){ return this.shifts.filter(s=>s.userId===id).length; },
+    empNightCnt(id){ return this.shifts.filter(s=>s.userId===id && s.period==='night').length; },
+    empWkndCnt(id){ return this.shifts.filter(s=>s.userId===id && s.period.startsWith('weekend_')).length; },
+    fairPct(id){ const max=Math.max(...this.employees.map(e=>this.empSCnt(e.id)),1); return (this.empSCnt(id)/max)*100; },
+    nightPct(id){ const max=Math.max(...this.employees.map(e=>this.empNightCnt(e.id)),1); return (this.empNightCnt(id)/max)*100; },
+    wkndPct(id){ const max=Math.max(...this.employees.map(e=>this.empWkndCnt(e.id)),1); return (this.empWkndCnt(id)/max)*100; },
+    changeWeek(d){ this.weekOffset+=d; },
+
+    /* AUTH */
+    async login(){
+      this.loading=true; this.loginErr='';
+      await new Promise(r=>setTimeout(r,260));
+      const u = this.users.find(x=>x.username===this.loginUser && x.password===this.loginPass);
+      if (u){
+        this.currentUser=u; this.isLoggedIn=true;
+        localStorage.setItem(LS_LGI,'1');
+        localStorage.setItem(LS_UID, String(u.id));
+        this.toast('مرحباً '+u.full_name+' 👋','success');
+        this.bgCloudSync();
+      } else {
+        this.loginErr='اسم المستخدم أو كلمة المرور غير صحيحة';
+        this.toast('بيانات الدخول غير صحيحة','error');
+      }
+      this.loading=false;
+    },
+
+    logout(){
+      this.isLoggedIn=false; this.currentUser=null;
+      this.loginUser=''; this.loginPass='';
+      localStorage.removeItem(LS_LGI);
+      localStorage.removeItem(LS_UID);
+    },
+
+    /* EMP CRUD */
+    openEmpModal(emp=null){
+      this.editingEmp=emp;
+      this.empForm = emp ? { full_name:emp.full_name, username:emp.username, password:emp.password } : { full_name:'', username:'', password:'' };
+      new bootstrap.Modal(document.getElementById('empModal')).show();
+    },
+    async saveEmp(){
+      if (!this.empForm.full_name||!this.empForm.username||!this.empForm.password){ this.toast('جميع الحقول مطلوبة','error'); return; }
+      const dup = this.users.find(u=>u.username===this.empForm.username && (!this.editingEmp||u.id!==this.editingEmp.id));
+      if (dup){ this.toast('اسم المستخدم مستخدم مسبقاً','error'); return; }
+      if (this.editingEmp){
+        const i=this.users.findIndex(u=>u.id===this.editingEmp.id);
+        this.$set(this.users, i, { ...this.editingEmp, ...this.empForm });
+        this.toast('تم تعديل بيانات الموظف','success');
+      } else {
+        this.users.push({ id:nextId++, ...this.empForm, role:'employee', exemptNight:false, exemptWeekend:false });
+        this.toast('تمت إضافة الموظف','success');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('empModal')).hide();
+      await this.sync();
+    },
+    async delEmp(id){
+      if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
+      this.users    = this.users.filter(u=>u.id!==id);
+      this.shifts   = this.shifts.filter(s=>s.userId!==id);
+      this.overrides= this.overrides.filter(o=>o.empId!==id);
+      this.leaves   = this.leaves.filter(l=>l.empId!==id);
+      await this.sync();
+      this.toast('تم حذف الموظف','success');
+    },
+    async clearAll(){
+      if (!confirm('مسح جميع المناوبات والاستثناءات؟ لا يمكن التراجع.')) return;
+      this.shifts=[]; this.overrides=[];
+      await this.sync();
+      this.toast('تم المسح','success');
+    },
+
+    /* WHATSAPP */
+    buildWeekMsg(filterEmpId=null){
+      const title = filterEmpId
+        ? '👤 جدول أسبوعي — ' + (this.users.find(u=>u.id===filterEmpId)?.full_name||'')
+        : '📋 الجدول الأسبوعي';
+      let msg = title + '\n🏥 مستشفى عبري\n📅 ' + this.weekRange + '\n';
+      for (const day of this.weekDays){
+        let dayHas=false;
+        let dayTxt = '\n*' + day.name + ' ' + day.display + '*\n';
+        if (day.isWeekend){
+          for (const p of Object.values(WK)){
+            const emp=this.resolveEmp(day.dateKey,p.key);
+            if (!emp) continue;
+            if (filterEmpId && emp.id!==filterEmpId) continue;
+            dayTxt += '🟠 '+p.label+' ('+p.time+'): '+emp.full_name+(this.isOv(day.dateKey,p.key)?' ✏️':'')+'\n';
+            dayHas=true;
+          }
+        } else {
+          const mornEmps=this.getMornEmps(day.dateKey);
+          if (!filterEmpId){ if(mornEmps.length){ dayTxt+='🟢 الدوام الرسمي (07:00–13:00): '+mornEmps.map(e=>e.full_name).join(', ')+'\n'; dayHas=true; } }
+          else if (mornEmps.find(e=>e.id===filterEmpId)){ dayTxt+='🟢 الدوام الرسمي (07:00–13:00)\n'; dayHas=true; }
+          const comp=this.getCompEmps(day.dateKey);
+          if (!filterEmpId && comp.length){ dayTxt+='🎁 تعويضية: '+comp.map(e=>e.full_name).join(', ')+'\n'; dayHas=true; }
+          else if (filterEmpId && comp.find(e=>e.id===filterEmpId)){ dayTxt+='🎁 إجازة تعويضية\n'; dayHas=true; }
+          for (const p of Object.values(WD)){
+            const emp=this.resolveEmp(day.dateKey,p.key);
+            if (!emp) continue;
+            if (filterEmpId && emp.id!==filterEmpId) continue;
+            dayTxt += '🟡 '+p.label+' ('+p.time+'): '+(filterEmpId?'':emp.full_name)+(this.isOv(day.dateKey,p.key)?' ✏️':'')+'\n';
+            dayHas=true;
+          }
+        }
+        if (dayHas||!filterEmpId) msg+=dayTxt;
+      }
+      return msg;
+    },
+
+    openWA(text){ window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text); },
+    shareWeekWA(){ this.openWA(this.buildWeekMsg()); },
+    shareMyWA(){   this.openWA(this.buildWeekMsg(this.currentUser.id)); },
+    shareEmpWA(emp){ this.openWA(this.buildWeekMsg(emp.id)); },
+
+    /* ─────────────────────────────────────
+       AUTO DISTRIBUTE  (respects approved leaves)
+    ─────────────────────────────────────── */
+    async autoDistribute(){
+      if (this.isDistributing) return;
+      const emps=this.employees, N=emps.length;
+      if (N<3){ this.toast('يجب 3 موظفين على الأقل','error'); return; }
+      this.isDistributing=true;
+      this.shifts=[]; this.overrides=[];
+      sId=1; oId=1;
+      const WEEKS=52, base=sunOf(new Date());
+      const wkPool=emps.filter(e=>!e.exemptWeekend), ngtPool=emps.filter(e=>!e.exemptNight);
+      const WKN=wkPool.length, NGTN=ngtPool.length;
+      const ctr={ wk:0, aft:0, eve:Math.floor(N/3), ngt:Math.floor(NGTN/3*2)%Math.max(NGTN,1) };
+      const pickFrom=(key,pool,exc)=>{
+        const L=pool.length; if(!L) return null;
+        for(let t=0;t<L;t++){ const e=pool[(ctr[key]+t)%L]; if(!exc.has(e.id)){ ctr[key]=(ctr[key]+t+1)%L; return e; } }
+        const e=pool[ctr[key]%L]; ctr[key]=(ctr[key]+1)%L; return e;
+      };
+      let prevWkWorkerIds=[];
+
+      for(let w=0;w<WEEKS;w++){
+        const sun=addD(base,w*7), friDate=fmt(addD(sun,5)), satDate=fmt(addD(sun,6));
+
+        /* Compensatory leaves from previous weekend */
+        if(prevWkWorkerIds.length>0){
+          let ci=0;
+          for(let dow=0;dow<5;dow++){
+            const dk=fmt(addD(sun,dow)), count=COMP_PATTERN[dow];
+            for(let j=0;j<count;j++) if(ci<prevWkWorkerIds.length) this.shifts.push({ id:sId++, date:dk, period:'compensation', userId:prevWkWorkerIds[ci++] });
+          }
+        }
+
+        /* Weekend — skip employees on approved leave */
+        const friLeavers = new Set(this.leaves.filter(l=>l.status==='approved'&&l.startDate<=friDate&&l.endDate>=friDate).map(l=>l.empId));
+        const satLeavers = new Set(this.leaves.filter(l=>l.status==='approved'&&l.startDate<=satDate&&l.endDate>=satDate).map(l=>l.empId));
+
+        const wkUsed=new Set(), friW=[];
+        if(WKN>=1){
+          for(let slot=0;slot<4&&friW.length<Math.min(4,WKN);slot++){
+            const exc = new Set([...wkUsed,...friLeavers]);
+            const e=pickFrom('wk',wkPool,exc);
+            if(e && !friLeavers.has(e.id) && !wkUsed.has(e.id)){
+              friW.push(e); wkUsed.add(e.id);
+              this.shifts.push({ id:sId++, date:friDate, period:WK_SLOTS[slot], userId:e.id });
+            }
+          }
+        }
+        const satW=[];
+        if(WKN>=1){
+          for(let slot=0;slot<4&&satW.length<Math.min(4,WKN);slot++){
+            const exc = new Set([...wkUsed,...satLeavers]);
+            const e=pickFrom('wk',wkPool,exc);
+            if(e && !satLeavers.has(e.id)){
+              satW.push(e); wkUsed.add(e.id);
+              this.shifts.push({ id:sId++, date:satDate, period:WK_SLOTS[slot], userId:e.id });
+            }
+          }
+        }
+        prevWkWorkerIds=[...friW,...satW].map(e=>e.id);
+
+        /* Weekdays — skip employees on approved leave */
+        for(let dow=0;dow<5;dow++){
+          const dk=fmt(addD(sun,dow));
+          const compBusy=new Set(this.shifts.filter(s=>s.date===dk&&s.period==='compensation').map(s=>s.userId));
+          // Add leave employees to daily busy set
+          const leaveBusy=new Set(this.leaves.filter(l=>l.status==='approved'&&l.startDate<=dk&&l.endDate>=dk).map(l=>l.empId));
+          const daily=new Set([...compBusy,...leaveBusy]);
+
+          const aftE=pickFrom('aft',emps,daily); if(aftE){ daily.add(aftE.id); this.shifts.push({ id:sId++, date:dk, period:'afternoon', userId:aftE.id }); }
+          const eveE=pickFrom('eve',emps,daily); if(eveE){ daily.add(eveE.id); this.shifts.push({ id:sId++, date:dk, period:'evening', userId:eveE.id }); }
+
+          let ngtE=null;
+          if(NGTN>0){
+            const ngtPoolDay = ngtPool.filter(e=>!leaveBusy.has(e.id));
+            ngtE=pickFrom('ngt', ngtPoolDay.length ? ngtPoolDay : ngtPool, new Set([...daily]));
+            if(ngtE&&daily.has(ngtE.id)) ngtE=pickFrom('ngt',emps,daily);
+          } else {
+            ngtE=pickFrom('ngt',emps,daily);
+          }
+          if(ngtE) this.shifts.push({ id:sId++, date:dk, period:'night', userId:ngtE.id });
+        }
+      }
+
+      await this.sync();
+      this.isDistributing=false;
+      this.toast('✅ تم التوزيع الدوراني لسنة كاملة (مع مراعاة الإجازات)','success');
+    }
+  },
+
+  /* MOUNTED */
+  async mounted(){
+    const ci = localStorage.getItem(LS_LGI);
+    const cu = localStorage.getItem(LS_UID);
+    const cached = loadLocalCache();
+
+    if (cached && cached.users){
+      this.normaliseData(cached);
+      if (ci==='1' && cu){
+        const u = this.users.find(x => x.id == cu);
+        if (u){
+          this.currentUser = u;
+          this.isLoggedIn  = true;
+          this.splashHide = true;
+          setTimeout(()=>{ this.showSplash=false; }, 420);
+          this.bgCloudSync();
+          return;
+        }
+      }
+      this.splashHide = true;
+      setTimeout(()=>{ this.showSplash=false; }, 420);
+      return;
+    }
+
+    let cloud = await loadCompressed();
+    if (cloud && cloud.users){
+      this.normaliseData(cloud);
+      saveLocalCache(this.users, this.shifts, this.overrides, this.leaves);
+      if (ci==='1' && cu){
+        const u = this.users.find(x => x.id == cu);
+        if (u){ this.currentUser=u; this.isLoggedIn=true; this.toast('أهلاً بعودتك يا '+u.full_name+' 👋','success'); }
+      }
+    } else {
+      const emps = Array.from({length:15},(_,i)=>({ id:i+1, username:'emp'+(i+1), password:'123', full_name:'الموظف '+(i+1), role:'employee', exemptNight:false, exemptWeekend:false }));
+      this.users=[ADMIN,...emps]; this.shifts=[]; this.overrides=[]; this.leaves=[];
+      nextId=16;
+      await saveCompressed(this.users, this.shifts, this.overrides, this.leaves);
+      saveLocalCache(this.users, this.shifts, this.overrides, this.leaves);
+    }
+
+    this.splashHide=true;
+    setTimeout(()=>{ this.showSplash=false; }, 420);
+  }
+});
+</script>
 </body>
 </html>
